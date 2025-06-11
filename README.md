@@ -51,3 +51,17 @@ DO NOT UPDATE ANY OF THE PARAMETERS IN METHOD
 	allIn(Amount, betList, turn, bank, pot): goes all in
  
 	Please no touchy the parameter of the actions
+
+How to get it to work on your side:
+
+1.Download all the files
+
+2. In an IDE (Use Pycharm if none) import all the files into one folder/ directory
+
+3. Make a new file in the directory(Your Bot) and name it something memorable EX: theTerminator.py
+
+4. Import PokerMoves and make turn(stage, amount, betList, turn, hand, comCards, bank, pot)
+
+5. In Main.py import your file EX: import theTerminator and update the dictionry bot_map with the value of your corresponding key (your intials) with your bot file import EX: "JC": theTerminator
+
+6. run
