@@ -32,7 +32,8 @@ To create a bot it must be:
 	hand: This the hole cards/ cards in your hand
  
 	comCards: Community Cards
- 
+
+ 	allBanks: A list of the number of chips people have including you
 	bank: money you have
  
 	pot: money in pot
