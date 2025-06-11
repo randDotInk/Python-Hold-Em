@@ -40,10 +40,15 @@ for _ in range(80):
     pot = 0
     ante = 1
     bet = 0
+    
+    # --- Deal hands ---
+    for key in player_keys:
+        hands[key] = [deck.pop(0), deck.pop(0)]
+
     # --- Ante Round ---
-    while not (all(p[1] == ante for p in playerStatus) and sum(betList) > 0):
+    while not (all(p[1] == ante or p[0] in [-3,-4] for p in playerStatus) and sum(betList) > 0):
         for i, key in enumerate(player_keys):
-            if all(p[1] == ante for p in playerStatus) and sum(betList) > 0:
+            if all(p[1] == ante or p[0] in [-3,-4] for p in playerStatus) and sum(betList) > 0:
                 break
             bot_instance = bot_map[key]
             playerStatus[i] = bot_instance.turn(1, ante, betList, i, hands[key], Community,players.values(), playerStatus[i][2], pot)
@@ -57,10 +62,7 @@ for _ in range(80):
     print(f"Ante: {ante}")
     print(f"Final chip counts: {players}")
 
-    # --- Deal hands ---
-    for key in player_keys:
-        hands[key] = [deck.pop(0), deck.pop(0)]
-
+    
     # --- Deal flop ---
     Community = [deck.pop(0), deck.pop(0), deck.pop(0)]
 
@@ -156,3 +158,14 @@ for _ in range(80):
     if len(player_keys) == 1:
         print(f"Final Winner is {players}")
         break
+        
+    players = list(players.items())
+
+    res = [test_dict[(i - 1) % len(test_dict)]
+       for i, x in enumerate(test_dict)]
+
+    res = {sub[0]: sub[1] for sub in res}
+    players=res
+    player_keys= player_keys[-1:]+player_keys[:-1]
+    playerStatus = playerStats[-1:]+playerStatus[:-1]
+
