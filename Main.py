@@ -22,14 +22,14 @@ playerStatus = [[0, 0, 2000, 0] for _ in player_keys]
 
 # --- Set all bots to use same logic for now ---
 bot_map = {
-    "DL": aggressive_bot,
-    "RC": passive_bot,
+    "DL": random_bot,
+    "RC": random_bot,
     "MU": random_bot,
-    "LH": aggressive_bot,
-    "SK": passive_bot,
+    "LH": random_bot,
+    "SK": random_bot,
     "JP": random_bot,
-    "JC": aggressive_bot,
-    "CS": passive_bot
+    "JC": random_bot,
+    "CS": random_bot
 }
 for _ in range(80):
     deck = [(face, rank) for rank in ranks for face in faces]
@@ -46,10 +46,11 @@ for _ in range(80):
             if all(p[1] == ante for p in playerStatus) and sum(betList) > 0:
                 break
             bot_instance = bot_map[key]
-            playerStatus[i] = bot_instance.turn(1, ante, betList, i, hands[key], Community, playerStatus[i][2], pot)
+            playerStatus[i] = bot_instance.turn(1, ante, betList, i, hands[key], Community,players.values(), playerStatus[i][2], pot)
             ante = max(ante, playerStatus[i][1])
             players[key] = playerStatus[i][2]
             pot = max(pot, playerStatus[i][3])
+
             betList[i] = ante
 
     print("ANTE OVER")
@@ -83,7 +84,7 @@ for _ in range(80):
                     continue
 
                 bot_instance = bot_map[key]
-                playerStatus[i] = bot_instance.turn(2, bet, betList, i, hands[key], Community, playerStatus[i][2], pot)
+                playerStatus[i] = bot_instance.turn(2, bet, betList, i, hands[key], Community,players.values(), playerStatus[i][2], pot)
 
                 bet = max(bet, playerStatus[i][1])
                 players[key] = playerStatus[i][2]
@@ -100,30 +101,53 @@ for _ in range(80):
     # --- Evaluate Scores ---
     final_scores = []
     for i, key in enumerate(player_keys):
-        if playerStatus[i][0] == -3:
-            final_scores.append((key, 0.0))
+        if playerStatus[i][0] == -3:  # Folded
+            final_scores.append((key, -1))  # Disqualified score
         else:
             final_scores.append((key, pm.evaluateHand(hands[key] + Community)))
-    print(final_scores)
-    print(playerStatus)
-    # --- Determine Winner(s) ---
+
+    print("Final Scores:", final_scores)
+
+    # --- Build Contribution List ---
+    contributions = {key: 2000 - playerStatus[i][2] for i, key in enumerate(player_keys)}
+
+    # --- Build Side Pots ---
+    side_pots = []
+    sorted_contribs = sorted(set(contributions.values()))
+    previous = 0
+
+    for threshold in sorted_contribs:
+        eligible = [key for key in player_keys if contributions[key] >= threshold]
+        pot_amount = (threshold - previous) * len(eligible)
+        if pot_amount > 0:
+            side_pots.append((eligible.copy(), pot_amount))
+        previous = threshold
+
+    # --- Sort scores descending ---
     final_scores.sort(key=lambda x: x[1], reverse=True)
-    winner_score = final_scores[0][1]
-    winners = [name for name, score in final_scores if score == winner_score]
 
-    # --- Split Pot ---
-    split_pot = pot // len(winners)
-    for winner in winners:
-        players[winner] += split_pot
+    # --- Distribute Side Pots ---
+    for eligible, side_amount in side_pots:
+        # From the best score down, find eligible winner(s)
+        top_score = -1
+        side_winners = []
 
-    # --- Final Output ---
-    print("\n--- GAME RESULT ---")
-    print(f"Community Cards: {Community}")
-    for key in player_keys:
-        print(f"{key}: {hands[key]}")
-    print(f"Winners: {winners} with score {winner_score}")
-    print(f"Each winner receives {split_pot}")
+        for name, score in final_scores:
+            if name not in eligible:
+                continue
+            if score > top_score:
+                top_score = score
+                side_winners = [name]
+            elif score == top_score:
+                side_winners.append(name)
+
+        if side_winners:
+            share = side_amount // len(side_winners)
+            for winner in side_winners:
+                players[winner] += share
+
     print(f"Final chip counts: {players}")
+
     for i, key in enumerate(player_keys):
         if playerStatus[i][2] <= 0:
             playerStatus.pop(i)
