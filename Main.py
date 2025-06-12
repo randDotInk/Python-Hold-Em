@@ -40,11 +40,19 @@ for _ in range(80):
     pot = 0
     ante = 1
     bet = 0
+    
+    # --- Deal hands ---
+    for key in player_keys:
+        hands[key] = [deck.pop(0), deck.pop(0)]
+
     # --- Ante Round ---
-    while not (all(p[1] == ante for p in playerStatus) and sum(betList) > 0):
+    while not (all(p[1] == ante or p[0] in [-3,-4] for p in playerStatus) and sum(betList) > 0):
         for i, key in enumerate(player_keys):
-            if all(p[1] == ante for p in playerStatus) and sum(betList) > 0:
+            if all(p[1] == ante or p[0] in [-3,-4] for p in playerStatus) and sum(betList) > 0:
                 break
+            if playerStatus[i][0] in [-3, -4]:
+                continue
+            
             bot_instance = bot_map[key]
             playerStatus[i] = bot_instance.turn(1, ante, betList, i, hands[key], Community,players.values(), playerStatus[i][2], pot)
             ante = max(ante, playerStatus[i][1])
@@ -57,10 +65,7 @@ for _ in range(80):
     print(f"Ante: {ante}")
     print(f"Final chip counts: {players}")
 
-    # --- Deal hands ---
-    for key in player_keys:
-        hands[key] = [deck.pop(0), deck.pop(0)]
-
+    
     # --- Deal flop ---
     Community = [deck.pop(0), deck.pop(0), deck.pop(0)]
 
@@ -109,7 +114,7 @@ for _ in range(80):
     print("Final Scores:", final_scores)
 
     # --- Build Contribution List ---
-    contributions = {key: 2000 - playerStatus[i][2] for i, key in enumerate(player_keys)}
+    contributions = {key: players[key] - playerStatus[i][2] for i, key in enumerate(player_keys)}
 
     # --- Build Side Pots ---
     side_pots = []
@@ -156,3 +161,23 @@ for _ in range(80):
     if len(player_keys) == 1:
         print(f"Final Winner is {players}")
         break
+        
+        
+    players = list(players.items())
+
+    res = [players[(i - 1) % len(players)]
+       for i, x in enumerate(players)]
+
+    res = {sub[0]: sub[1] for sub in res}
+    players=res
+    player_keys= player_keys[-1:]+player_keys[:-1]
+    playerStatus = playerStats[-1:]+playerStatus[:-1]
+
+if len(player_keys)!=1
+  max= 0
+  maxPlayer=""
+  for i, key in enumerate(player_keys):
+      if playerStatus[i][2] > max:
+          max =playerStatus[i][2]
+          maxPlayer = key
+  print(f"Final winner is {key}: ${players[key]}")
