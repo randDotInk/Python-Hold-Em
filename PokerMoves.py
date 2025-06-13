@@ -22,6 +22,7 @@ def raiseTo(bet, Amount, betList, turn, bank, pot):
     pot += extra
 
     if bet > Amount:
+        print(f"Raises to {bet}")
         return [-2, bet, bank, pot]  # Raise
     else:
         return [-1, bet, bank, pot]  # Call
@@ -48,6 +49,7 @@ def raiseBy(bet, Amount, betList, turn, bank, pot):
     pot += extra
 
     if bet > Amount:
+        print(f'Raises to {bet}')
         return [-2, bet, bank, pot]
     else:
         return [-1, bet, bank, pot]
@@ -71,14 +73,17 @@ def check(Amount, betList, turn, bank, pot):
 
 
 def fold(Amount, betList, turn, bank, pot):
+    print("Folds")
     return [-3, Amount, bank, pot]
 
 
 def allIn(Amount, betList, turn, bank, pot):
-    if bank <= 0:
-        return [-3, 0, bank, pot]
+    if bank < Amount:
+        print("ALL IN!")
+        return [-4, Amount, bank, pot]
     pot += bank
     bank = 0
+    print("ALL IN!")
     return [-4, Amount, bank, pot]
 
 
@@ -130,7 +135,8 @@ def handrank(hand):
 
     elif isSeq:
         total = 4.0
-        total += handorder.index(hand[0][1]) / 100.0
+        if len(hand)>0:
+            total += handorder.index(hand[0][1]) / 100.0
         return total
 
     elif dupes[0] == 2:
@@ -181,11 +187,29 @@ def isSequential(hand):
 
 
 def isSameSuit(hand):
-    suit = hand[0][0]
-    for i in range(1, len(hand)):
-        if hand[i][0] != suit:
-            return False
-    return True
+    S = 0
+    h = 0
+    d = 0
+    c = 0
+    for i in hand:
+        suit = i[1]
+
+        match suit:
+            case "S":
+                S+=1
+                break
+            case"H":
+                h+=1
+                break
+            case "D":
+                d+=1
+                break
+            case "C":
+                c+=1
+    if S>=5 or h>=5 or d>=5 or c>=5:
+        return True
+    return False
+
 
 
 def getHighestCard(hand):
