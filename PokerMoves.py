@@ -1,3 +1,4 @@
+import random
 handorder = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
 
 def raiseTo(bet, Amount, betList, turn, bank, pot):
@@ -22,6 +23,7 @@ def raiseTo(bet, Amount, betList, turn, bank, pot):
     pot += extra
 
     if bet > Amount:
+        print(f"Raises to {bet}")
         return [-2, bet, bank, pot]  # Raise
     else:
         return [-1, bet, bank, pot]  # Call
@@ -48,6 +50,7 @@ def raiseBy(bet, Amount, betList, turn, bank, pot):
     pot += extra
 
     if bet > Amount:
+        print(f'Raises to {bet}')
         return [-2, bet, bank, pot]
     else:
         return [-1, bet, bank, pot]
@@ -71,14 +74,17 @@ def check(Amount, betList, turn, bank, pot):
 
 
 def fold(Amount, betList, turn, bank, pot):
+    print("Folds")
     return [-3, Amount, bank, pot]
 
 
 def allIn(Amount, betList, turn, bank, pot):
-    if bank <= 0:
-        return [-3, 0, bank, pot]
+    if bank < Amount:
+        print("ALL IN!")
+        return [-4, Amount, bank, pot]
     pot += bank
     bank = 0
+    print("ALL IN!")
     return [-4, Amount, bank, pot]
 
 
@@ -130,7 +136,8 @@ def handrank(hand):
 
     elif isSeq:
         total = 4.0
-        total += handorder.index(hand[0][1]) / 100.0
+        if len(hand)>0:
+            total += handorder.index(hand[0][1]) / 100.0
         return total
 
     elif dupes[0] == 2:
@@ -181,11 +188,29 @@ def isSequential(hand):
 
 
 def isSameSuit(hand):
-    suit = hand[0][0]
-    for i in range(1, len(hand)):
-        if hand[i][0] != suit:
-            return False
-    return True
+    S = 0
+    h = 0
+    d = 0
+    c = 0
+    for i in hand:
+        suit = i[1]
+
+        match suit:
+            case "S":
+                S+=1
+                break
+            case"H":
+                h+=1
+                break
+            case "D":
+                d+=1
+                break
+            case "C":
+                c+=1
+    if S>=5 or h>=5 or d>=5 or c>=5:
+        return True
+    return False
+
 
 
 def getHighestCard(hand):
@@ -240,3 +265,79 @@ def evaluateHand(seven_card_hand):
     return best_score
 
 
+
+def straightProb(hand, ComCards):
+    count = 0
+
+    Hand = []
+    Hand.append(hand[0][1])
+    Hand.append(hand[1][1])
+    com = []
+    for i in range(len(ComCards)):
+        com.append(ComCards[i][1])
+
+    for _ in range(10000):
+        cards = Hand + com
+
+        deck = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'] * 4
+
+        for i in cards:
+            deck.remove(i)
+
+        random.shuffle(deck)
+
+        cards += deck[:7 - len(cards)]
+
+        unique_indexes = sorted(set(handorder.index(card) for card in cards))
+
+        found_straight = False
+        for i in range(len(unique_indexes) - 4):
+            window = unique_indexes[i:i + 5]
+            if all(window[j] == window[0] + j for j in range(5)):
+                count += 1
+                found_straight = True
+                break
+
+        if not found_straight:
+            low_straight = {'A', '2', '3', '4', '5'}
+            if low_straight.issubset(set(cards)):
+                count += 1
+
+    return (count / 10000)
+import random
+
+def flushProb(hand, ComCards):
+    count = 0
+
+    Hand = hand[:]        # list of tuples like ('H', 'A')
+    com = ComCards[:]
+
+    suits = ['S', 'H', 'D', 'C']
+    ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+    # Build full deck of (suit, rank) tuples
+    deck = []
+    for s in suits:
+        for r in ranks:
+            deck.append((s, r))
+
+    for _ in range(10000):
+        cards = Hand + com
+
+        remaining_deck = deck[:]
+        for card in cards:
+            if card in remaining_deck:
+                remaining_deck.remove(card)
+
+        random.shuffle(remaining_deck)
+
+        cards += remaining_deck[:7 - len(cards)]
+
+        suit_counts = {}
+        for card in cards:
+            suit_counts[card[0]] = suit_counts.get(card[0], 0) + 1
+
+        if any(count >= 5 for count in suit_counts.values()):
+            count += 1
+
+    return count / 10000
